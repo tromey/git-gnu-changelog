@@ -1,0 +1,112 @@
+#!/usr/bin/perl
+
+use Cwd;
+
+# Read a ChangeLog file and return just the first paragraph.
+sub read_clog {
+    my ($fname) = @_;
+
+    open (CLOG, "<", $fname);
+    my (@para) = ();
+    my $state = 0;
+
+    while (<CLOG>) {
+	chomp;
+
+	if (m/^\s*$/) {
+	    ++$state;
+	}
+	last if $state == 3;
+
+	push @para, $_;
+
+	if ($state == 0) {
+	    m/^[0-9]+/ || die "badly formatted ChangeLog entry in $fname";
+	    ++$state;
+	}
+    }
+
+    close (CLOG);
+    return @para;
+}
+
+sub print_lines {
+    my ($file, @text) = @_;
+    my ($line);
+
+    for $line (@text) {
+	print $file $line;
+	print $file "\n";
+    }
+}
+
+@prefix = ();
+@suffix = ();
+@changelogs = ();
+@old_cl_text = ();
+
+$fixup_mode = ($ARGV[0] eq '-');
+
+if (!defined $ENV{'GIT_PREFIX'} || $ENV{'GIT_PREFIX'} eq '') {
+    $ENV{'GIT_PREFIX'} = '.';
+}
+$ENV{'GIT_PREFIX'} .= '/';
+
+open (MSG, "<" . $ARGV[0]) || die "can't read commit file";
+
+$where = 0;
+while (<MSG>) {
+    chomp;
+
+    if (m/^\# Please enter the commit/) {
+	$where = 2;
+    }
+
+    $is_comment = ($fixup_mode && m/^\#/);
+
+    next if m/\~ChangeLog\~/;
+
+    if ($where == 0) {
+	if (m/^[0-9]{4}-[0-9]{2}-[0-9]{2}\s/) {
+	    push @old_cl_text, $_;
+	    ++$where;
+	} else {
+	    push @prefix, $_;
+	}
+    } elsif ($where == 1) {
+	if (!$is_comment) {
+	    push @old_cl_text, $_;
+	}
+    } else {
+	if (!$is_comment) {
+	    push @suffix, $_;
+	}
+    }
+
+    if ($_ =~ s,^\#\s+(modified|new file):\s+((.*/|)ChangeLog)$,\2,) {
+	push @changelogs, $_;
+    }
+}
+
+close (MSG);
+
+open (my $msg, ">" . $ARGV[0]) || die "can't reopen file for writing";
+
+print_lines ($msg, @prefix);
+
+if (!scalar @changelogs) {
+    print_lines ($msg, @old_cl_text);
+} else {
+    for $file (@changelogs) {
+	@cl_lines = read_clog ($ENV{'GIT_PREFIX'} . $file);
+	print_lines ($msg, @cl_lines);
+	if (scalar @cl_lines > 0) {
+	    print $msg "\n";
+	}
+    }
+}
+
+print_lines ($msg, @suffix);
+
+close ($msg);
+exit 0;

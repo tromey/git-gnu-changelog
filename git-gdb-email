@@ -1,0 +1,15 @@
+#!/bin/sh
+
+dir=$(git rev-parse --git-dir 2> /dev/null)
+
+attrs=$dir/info/attributes
+if test -f $attrs; then
+    echo "$attrs already exists" 1>&2
+    exit 1
+fi
+
+echo 'ChangeLog* diff=changelog' > $attrs
+trap 'rm -f $attrs' 0
+
+git send-email --ext-diff "$@"
+exit $?

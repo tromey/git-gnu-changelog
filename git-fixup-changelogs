@@ -1,0 +1,24 @@
+#!/bin/sh
+
+if test -z "$1"; then
+    echo "usage: git fixup-changelogs REVISIONS" 1>&2
+    exit 1
+fi
+
+git zardoz --tree-filter '
+   today=$(date +%Y-%m-%d)
+   git log -1 --pretty=format: --name-only $GIT_COMMIT |
+   grep ChangeLog |
+   while read clfile; do
+      sed -i "1 s/^[0-9-]*/$today/" $clfile
+      echo $clfile >&2
+   done
+   ' \
+       --msg-filter '
+   (cat; git log -1 --pretty=format: --name-only $GIT_COMMIT |
+   grep ChangeLog | tee /dev/stderr |
+   sed "s/^/# modified: /") |
+   prepare-commit-msg - | tee /dev/stderr' \
+       $1
+
+exit 0
