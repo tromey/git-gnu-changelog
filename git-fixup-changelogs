@@ -5,20 +5,18 @@ if test -z "$1"; then
     exit 1
 fi
 
-git zardoz --tree-filter '
+git filter-branch --tree-filter '
    today=$(date +%Y-%m-%d)
    git log -1 --pretty=format: --name-only $GIT_COMMIT |
    grep ChangeLog |
    while read clfile; do
       sed -i "1 s/^[0-9-]*/$today/" $clfile
-      echo $clfile >&2
-   done
-   ' \
+   done' \
        --msg-filter '
    (cat; git log -1 --pretty=format: --name-only $GIT_COMMIT |
-   grep ChangeLog | tee /dev/stderr |
+   grep ChangeLog |
    sed "s/^/# modified: /") |
-   prepare-commit-msg - | tee /dev/stderr' \
+   prepare-commit-msg -' \
        $1
 
 exit 0
