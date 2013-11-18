@@ -6,5 +6,5 @@ git log -1 --pretty=format: --name-only $GIT_COMMIT |
 grep ChangeLog |
 while read clfile; do
     echo "Rewriting $clfile..."
-    sed -i "1 s/^[0-9-]*/$today/" $top/$clfile
+    sed -i "1 s/^[0-9-]*/$today/" ${top}$clfile
 done
