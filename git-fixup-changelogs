@@ -1,22 +1,19 @@
 #!/bin/sh
 
 if test -z "$1"; then
-    echo "usage: git fixup-changelogs REVISIONS" 1>&2
+    echo "usage: git fixup-changelogs BASE-REVISION" 1>&2
     exit 1
 fi
 
-git filter-branch --tree-filter '
-   today=$(date +%Y-%m-%d)
-   git log -1 --pretty=format: --name-only $GIT_COMMIT |
-   grep ChangeLog |
-   while read clfile; do
-      sed -i "1 s/^[0-9-]*/$today/" $clfile
-   done' \
-       --msg-filter '
-   (cat; git log -1 --pretty=format: --name-only $GIT_COMMIT |
-   grep ChangeLog |
-   sed "s/^/# modified: /") |
-   prepare-commit-msg -' \
-       $1
+dir=$(git rev-parse --git-dir)
+base_rev="$1"
+
+GIT_EDITOR='perl -pi -e s/pick/edit/' git rebase -i "$base_rev"
+
+while test -f $dir/rebase-merge/interactive; do
+    git simple-fixup
+    git add -u
+    GIT_EDITOR=true git rebase --continue
+done
 
 exit 0
