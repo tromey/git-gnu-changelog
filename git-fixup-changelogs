@@ -12,7 +12,7 @@ GIT_EDITOR='perl -pi -e s/pick/edit/' git rebase -i "$base_rev"
 
 while test -f $dir/rebase-merge/interactive; do
     git simple-fixup
-    git add -u
+    GIT_EDITOR=true git commit -a --amend
     GIT_EDITOR=true git rebase --continue
 done
 
