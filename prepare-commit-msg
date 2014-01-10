@@ -34,7 +34,13 @@ sub print_lines {
     my ($file, @text) = @_;
     my ($line);
 
+    my ($last_was_empty) = 0;
     for $line (@text) {
+	if ($last_was_empty && $line eq '') {
+	    next;
+	}
+	$last_was_empty = ($line eq '');
+
 	print $file $line;
 	print $file "\n";
     }
@@ -46,6 +52,8 @@ sub print_lines {
 @old_cl_text = ();
 
 $fixup_mode = ($ARGV[0] eq '-');
+
+$squash_mode = defined $ARGV[1] && $ARGV[1] eq 'squash';
 
 if (!defined $ENV{'GIT_PREFIX'} || $ENV{'GIT_PREFIX'} eq '') {
     $ENV{'GIT_PREFIX'} = '.';
@@ -74,11 +82,22 @@ while (<MSG>) {
 	    push @prefix, $_;
 	}
     } elsif ($where == 1) {
-	if (!$is_comment) {
+	if ($squash_mode && m/^\#.* commit message/) {
+	    # In squash mode, we alternate text/ChangeLog/text/ChangeLog.
+	    # So, we just finished a "ChangeLog", go back to text.
+	    $where = 0;
+	} elsif (!$is_comment) {
 	    push @old_cl_text, $_;
 	}
     } else {
-	if (!$is_comment) {
+	if ($squash_mode) {
+	    if (m/^\#.* commit message/) {
+		# In squash mode, we alternate text/ChangeLog/text/ChangeLog.
+		# So, we just finished a "ChangeLog", go back to text.
+		$where = 0;
+	    }
+	    push @suffix, $_;
+	} elsif (!$is_comment) {
 	    push @suffix, $_;
 	}
     }
