@@ -31,9 +31,11 @@ sub read_clog {
 }
 
 sub print_lines {
-    my ($file, @text) = @_;
+    my ($file, $cl_name, @text) = @_;
     my ($line);
 
+    print $file $cl_name;
+    print $file "\n";
     my ($last_was_empty) = 0;
     for $line (@text) {
 	if ($last_was_empty && $line eq '') {
@@ -75,7 +77,15 @@ while (<MSG>) {
     next if m/\~ChangeLog\~/;
 
     if ($where == 0) {
-	if (m/^[0-9]{4}-[0-9]{2}-[0-9]{2}\s/) {
+	# Allow "ChangeLog" or "dir/ChangeLog"; but also allow
+	# upgrading from before gdb added the ChangeLog file name
+	# convention to commits, and search for the first line of a
+	# ChangeLog entry.
+	if (m,^(.*/)?ChangeLog$,) {
+	    # In this case don't add to old_cl_text, just change the
+	    # state.  We'll re-add the file name later.
+	    ++$where;
+	} elsif (m/^[0-9]{4}-[0-9]{2}-[0-9]{2}\s/) {
 	    push @old_cl_text, $_;
 	    ++$where;
 	} else {
@@ -118,7 +128,7 @@ if (!scalar @changelogs) {
 } else {
     for $file (@changelogs) {
 	@cl_lines = read_clog ($ENV{'GIT_PREFIX'} . $file);
-	print_lines ($msg, @cl_lines);
+	print_lines ($msg, $file, @cl_lines);
 	if (scalar @cl_lines > 0) {
 	    print $msg "\n";
 	}
