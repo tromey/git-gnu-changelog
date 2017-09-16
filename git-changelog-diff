@@ -1,5 +1,0 @@
-#!/bin/sh
-
-# changelog diff driver for git
-
-exit 0

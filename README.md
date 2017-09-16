@@ -15,6 +15,14 @@ In your ChangeLog-using project, use the provided `prepare-commit-msg` in your h
     cd $project/.git/hooks
     ln -s $git_gnu_changelog/prepare-commit-msg
 
+Finally, define a "changelog" diff driver.  This is used by `git gdb-email` (see below).  To do this, add this to your `~/.gitconfig`:
+
+```
+[diff "changelog"]
+	name = GNU-style ChangeLog diff driver
+	command = /bin/true
+```
+
 Now, when developing, write ChangeLog entries as usual, in the appropriate files in the tree.  When you commit, the ChangeLog entries will be automatically put into the commit message.  This works well with rebasing and editing commits as well -- the script will replace the old ChangeLog entries in the commit message with the updated ones from the commit itself.
 
 The ChangeLog merge script makes sure that merges and rebases will go smoothly.  You won't see conflicts arising from the ChangeLog files.
