@@ -4,7 +4,7 @@ If you're a project maintainer and you use the existence of these scripts to jus
 
 Using these scripts:
 
-* `git clone`, of couse!
+* `git clone`, of course!
 * Install the git ChangeLog merge driver, following [these instructions](https://gnu.wildebeest.org/blog/mjw/2012/03/16/automagically-merging-changelog-files-with-mercurial-or-git/)
 * Optionally, install a skeleton ChangeLog generator, like `generate-changelog` from [the gcc refactoring repository](https://github.com/davidmalcolm/gcc-refactoring-scripts), or `mklog` from [gcc's contrib](https://github.com/mirrors/gcc/blob/master/contrib/mklog)
 
