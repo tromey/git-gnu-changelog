@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 
-use Cwd;
+use Cwd 'abs_path';
+use Cwd 'cwd';
 
 # Read a ChangeLog file and return just the first paragraph.
 sub read_clog {
@@ -61,6 +62,10 @@ if (!defined $ENV{'GIT_PREFIX'} || $ENV{'GIT_PREFIX'} eq '') {
     $ENV{'GIT_PREFIX'} = '.';
 }
 $ENV{'GIT_PREFIX'} .= '/';
+
+# Find the absolute top directory.
+chomp ($top = `git rev-parse --show-toplevel`);
+$top .= '/' unless $top =~ /\/$/;
 
 open (MSG, "<" . $ARGV[0]) || die "can't read commit file";
 
@@ -127,8 +132,11 @@ if (!scalar @changelogs) {
     print_lines ($msg, @old_cl_text);
 } else {
     for $file (@changelogs) {
-	@cl_lines = read_clog ($ENV{'GIT_PREFIX'} . $file);
-	print_lines ($msg, $file, @cl_lines);
+	$file = abs_path ($ENV{'GIT_PREFIX'} . $file);
+	@cl_lines = read_clog ($file);
+	# Make sure the ChangeLog file name is relative to the git
+	# root.
+	print_lines ($msg, substr ($file, length ($top)), @cl_lines);
 	if (scalar @cl_lines > 0) {
 	    print $msg "\n";
 	}
