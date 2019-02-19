@@ -2,6 +2,10 @@
 
 dir=$(git rev-parse --git-dir 2> /dev/null)
 
+if test -f "$dir/commondir"; then
+    dir="$dir/$(cat $dir/commondir)"
+fi
+
 attrs=$dir/info/attributes
 if test -f $attrs; then
     echo "$attrs already exists" 1>&2
