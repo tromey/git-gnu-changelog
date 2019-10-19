@@ -70,6 +70,7 @@ $top .= '/' unless $top =~ /\/$/;
 open (MSG, "<" . $ARGV[0]) || die "can't read commit file";
 
 $where = 0;
+$change_id = '';
 while (<MSG>) {
     chomp;
 
@@ -81,7 +82,13 @@ while (<MSG>) {
 
     next if m/\~ChangeLog\~/;
 
-    if ($where == 0) {
+    if (/^Change-Id:/) {
+	# No matter which state we're in, we might see a change id.
+	# We want to save the first one and restore it at the end.
+	if ($change_id eq '') {
+	    $change_id = $_;
+	}
+    } elsif ($where == 0) {
 	# Allow "ChangeLog" or "dir/ChangeLog"; but also allow
 	# upgrading from before gdb added the ChangeLog file name
 	# convention to commits, and search for the first line of a
@@ -141,6 +148,11 @@ if (!scalar @changelogs) {
 	    print $msg "\n";
 	}
     }
+}
+
+if ($change_id ne '') {
+    print $msg $change_id;
+    print $msg "\n\n";
 }
 
 print_lines ($msg, @suffix);
