@@ -94,8 +94,9 @@ while (<MSG>) {
 	# convention to commits, and search for the first line of a
 	# ChangeLog entry.
 	if (m,^(.*/)?ChangeLog$,) {
-	    # In this case don't add to old_cl_text, just change the
-	    # state.  We'll re-add the file name later.
+	    # With commit -C we don't get information about changes,
+	    # so remember the current ChangeLog hunk.
+	    push @old_cl_text, $_;
 	    ++$where;
 	} elsif (m/^[0-9]{4}-[0-9]{2}-[0-9]{2}\s/) {
 	    push @old_cl_text, $_;
