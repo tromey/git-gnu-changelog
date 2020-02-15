@@ -1,12 +1,12 @@
 #!/bin/sh
 
 if test -z "$1"; then
-    echo "usage: git fixup-changelogs BASE-REVISION" 1>&2
-    exit 1
+    base_rev=@{u}
+else
+    base_rev="$1"
 fi
 
 dir=$(git rev-parse --git-dir)
-base_rev="$1"
 
 GIT_EDITOR='perl -pi -e s/pick/edit/' git rebase -i "$base_rev"
 
